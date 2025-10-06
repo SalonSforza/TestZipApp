@@ -11,9 +11,8 @@ public class UserRequestData {
 
     private String startDate;
     private String endDate;
-    int pageSize;
 
-    public String interpret() {
+    public String getParameters() {
 
         Scanner scanner = new Scanner(System.in);
 
@@ -22,10 +21,6 @@ public class UserRequestData {
 
         this.endDate = askDate(scanner, "Введите дату конца поиска в формате дд.мм.гггг" +
                                           " (или просто нажмите Enter, чтобы пропустить): ");
-
-        String pageSize = askPageSize(scanner,"Введите искомое количество страниц." +
-                                              " Нажмите Enter, чтобы пропустить: ");
-        this.pageSize = Integer.parseInt(pageSize);
 
         StringBuilder urlBuilder = new StringBuilder();
         boolean hasParam = false;
@@ -38,12 +33,6 @@ public class UserRequestData {
         if (!endDate.isEmpty()) {
             urlBuilder.append(hasParam ? "&" : "?");
             urlBuilder.append("filtermaxloaddate=").append(endDate);
-            hasParam = true;
-        }
-
-        if (!pageSize.isEmpty()) {
-            urlBuilder.append(hasParam ? "&" : "?");
-            urlBuilder.append("pageSize=").append(pageSize);
         }
 
         return urlBuilder.toString();
@@ -61,28 +50,6 @@ public class UserRequestData {
                 return input;
             } catch (DateTimeParseException e) {
                 System.out.println("Неверный формат даты. Используйте дд.мм.гггг или нажмите Enter, чтобы не указывать дату.");
-            }
-        }
-    }
-
-    private String askPageSize(Scanner scanner, String prompt) {
-        while (true) {
-            System.out.print(prompt);
-            String input = scanner.nextLine().trim();
-            if (input.isEmpty()) {
-                return "";
-            }
-            try {
-                int pages = Integer.parseInt(input);
-                if (pages > 0) {
-                    return input;
-                } else {
-                    System.out.println(
-                            "Количество страниц должно быть положительным числом. " +
-                            "В случае, если Вы не хотите указывать число страниц, нажмите Enter.");
-                }
-            } catch (NumberFormatException e) {
-                System.out.println("Неверный формат. Введите число или нажмите Enter, чтобы оставить поле пустым.");
             }
         }
     }
