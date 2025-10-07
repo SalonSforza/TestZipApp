@@ -160,7 +160,8 @@ public class ZipExtractor {
     private String escapeCsv(String value) {
         if (value == null) return "";
         value = value.replace("\"", "\"\"");
-        if (value.contains(",") || value.contains("\"") || value.contains("\n") || value.contains("\r")) {
+        value = value.replace("\n", " ").replace("\r", " ");
+        if (value.contains(",") || value.contains("\"")) {
             value = "\"" + value + "\"";
         }
         return value;
