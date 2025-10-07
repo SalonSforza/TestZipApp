@@ -16,12 +16,13 @@ import java.time.format.DateTimeFormatter;
 
 public class DataBaseFiller {
 
-    private static final String INSERT_STATEMENT = "INSERT INTO organizations (" +
-                                                   "id, reg_num, code, full_name, short_name, inn, kpp, ogrn, okopf_name, okopf_code, " +
-                                                   "okfs_name, okfs_code, city_name, street_name, house, region_name, status_name, record_num, " +
-                                                   "authorities, activities, heads, facial_accounts, fo_accounts, non_participant_permissions, " +
-                                                   "procurement_permissions, contacts, load_date" +
-                                                   ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String INSERT_STATEMENT =
+            "INSERT INTO organizations (" +
+            "id, reg_num, code, full_name, short_name, inn, kpp, ogrn, okopf_name, okopf_code, " +
+            "okfs_name, okfs_code, city_name, street_name, house, region_name, status_name, record_num, " +
+            "authorities, activities, heads, facial_accounts, fo_accounts, non_participant_permissions, " +
+            "procurement_permissions, contacts, load_date" +
+            ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final String DELETE_STATEMENT = "DELETE FROM organizations WHERE load_date BETWEEN ? AND ?";
     private static final String ENABLE_CLICKHOUSE_TRANSFER = "enable.clickhouse.transfer";
@@ -38,25 +39,16 @@ public class DataBaseFiller {
         try (Connection conn = PostgresConnectionManager.get();
              PreparedStatement stmt = conn.prepareStatement(INSERT_STATEMENT)) {
 
-            // Get all combined JSON from DataFetcher (already merged pages)
             String allPagesJson = dataFetcher.getResultingJson();
 
-            // Delete existing records in the date range
             setSqlDeleteStatementForTimeRange();
 
-            // Parse the entire JSON at once
             JsonNode rootNode = mapper.readTree(allPagesJson);
             JsonNode dataArray = rootNode.get("data");
-
-            int totalInserted = 0;
 
             for (JsonNode orgNode : dataArray) {
                 JsonNode info = orgNode.get("info");
 
-                // Print organization full name (optional)
-                System.out.println(info.get("fullName").asText());
-
-                // Set parameters
                 stmt.setString(1, orgNode.get("id").asText());
                 stmt.setString(2, info.get("regNum").asText());
                 stmt.setString(3, info.get("code").asText());
@@ -85,18 +77,14 @@ public class DataBaseFiller {
                 stmt.setObject(25, orgNode.get("procurementPermissions").toString(), java.sql.Types.OTHER);
                 stmt.setObject(26, orgNode.get("contacts").toString(), java.sql.Types.OTHER);
 
-                // Parse loadDate
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.S]");
                 String rawLoadDate = info.get("loadDate").asText().trim();
                 LocalDateTime dateTime = LocalDateTime.parse(rawLoadDate, formatter);
                 stmt.setTimestamp(27, java.sql.Timestamp.valueOf(dateTime));
 
-                // Add to batch
                 stmt.addBatch();
-                totalInserted++;
             }
 
-            // Execute the batch after all rows are added
             int[] results = stmt.executeBatch();
             int actuallyInserted = 0;
             for (int r : results) {
@@ -106,12 +94,9 @@ public class DataBaseFiller {
             }
             System.out.println("Фактически вставлено: " + actuallyInserted);
 
-            System.out.println("Всего вставлено компаний: " + totalInserted);
-
-            // Optional ClickHouse transfer
             if (Boolean.parseBoolean(PropertiesUtil.get(ENABLE_CLICKHOUSE_TRANSFER))) {
                 LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
-                LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate())
+                LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfEndFromString(getEndDate())
                         .withHour(23).withMinute(59).withSecond(59);
                 postgresToClickHouseTransfer.transfer(dateTimeOfStart, dateTimeOfEnd);
             }

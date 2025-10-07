@@ -13,7 +13,8 @@ import java.time.LocalDateTime;
 public class PostgresToClickHouseTransfer {
 
     private static final String SELECT_POSTGRES = "SELECT * FROM organizations WHERE load_date BETWEEN ? AND ?";
-    private static final String INSERT_CLICKHOUSE = "INSERT INTO organizations VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    private static final String INSERT_CLICKHOUSE =
+            "INSERT INTO organizations VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     private static final String DELETE_STATEMENT = "DELETE FROM organizations WHERE load_date BETWEEN ? AND ?";
 
     public void transfer(LocalDateTime start, LocalDateTime end) {

@@ -26,13 +26,15 @@ public final class PostgresConnectionManager {
 
     private static void initConnectionPool() {
         String poolSize = PropertiesUtil.get(POOL_SIZE_KEY);
-        Integer size = poolSize == null ? DEFAULT_POOL_SIZE : Integer.parseInt(poolSize);
+        int size = poolSize == null ? DEFAULT_POOL_SIZE : Integer.parseInt(poolSize);
         pool = new ArrayBlockingQueue<>(size);
         sourceConnections = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             Connection connection = open();
-            Connection proxyConnection = (Connection) Proxy.newProxyInstance(PostgresConnectionManager.class.getClassLoader(), new Class[]{Connection.class},
-                    ((proxy, method, args) -> method.getName().equals("close") ? pool.add((Connection) proxy) : method.invoke(connection, args)));
+            Connection proxyConnection = (Connection) Proxy
+                    .newProxyInstance(PostgresConnectionManager.class.getClassLoader(), new Class[]{Connection.class},
+                    ((proxy, method, args) -> method.getName()
+                            .equals("close") ? pool.add((Connection) proxy) : method.invoke(connection, args)));
             pool.add(proxyConnection);
             sourceConnections.add(connection);
         }
