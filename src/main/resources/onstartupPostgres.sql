@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS organizations (
-                                      id TEXT PRIMARY KEY,
+                                      id TEXT ,
                                       reg_num TEXT,
                                       code TEXT,
                                       full_name TEXT,

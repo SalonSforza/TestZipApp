@@ -37,59 +37,73 @@ public class DataBaseFiller {
     public void fillDataBase() {
         try (Connection conn = PostgresConnectionManager.get();
              PreparedStatement stmt = conn.prepareStatement(INSERT_STATEMENT)) {
-            String json = dataFetcher.getResultingJson();
+
+            String allPagesJson = dataFetcher.getResultingJson();
 
             setSqlDeleteStatementForTimeRange();
 
-            JsonNode rootNode = mapper.readTree(json);
+            String[] pageJsons = allPagesJson.split("\n");
+            int totalInserted = 0;
 
-            JsonNode dataArray = rootNode.get("data");
-            System.out.println("Пришло количество компаний: " + dataArray.size());
-            for (JsonNode orgNode : dataArray) {
-                JsonNode info = orgNode.get("info");
+            for (String pageJson : pageJsons) {
+                if (pageJson.trim().isEmpty()) continue;
+                JsonNode rootNode = mapper.readTree(pageJson);
+                JsonNode dataArray = rootNode.get("data");
 
-                System.out.println(info.get("fullName").asText());
+                System.out.println("Обработка страницы, компаний: " + dataArray.size());
 
-                stmt.setString(1, orgNode.get("id").asText());
-                stmt.setString(2, info.get("regNum").asText());
-                stmt.setString(3, info.get("code").asText());
-                stmt.setString(4, info.get("fullName").asText());
-                stmt.setString(5, info.get("shortName").asText());
-                stmt.setString(6, info.get("inn").asText());
-                stmt.setString(7, info.get("kpp").asText());
-                stmt.setString(8, info.get("ogrn").asText());
-                stmt.setString(9, info.get("okopfName").asText());
-                stmt.setString(10, info.get("okopfCode").asText());
-                stmt.setString(11, info.get("okfsName").asText());
-                stmt.setString(12, info.get("okfsCode").asText());
-                stmt.setString(13, info.get("cityName").asText());
-                stmt.setString(14, info.get("streetName").asText());
-                stmt.setString(15, info.get("house").asText());
-                stmt.setString(16, info.get("regionName").asText());
-                stmt.setString(17, info.get("statusName").asText());
-                stmt.setString(18, info.get("recordNum").asText());
+                for (JsonNode orgNode : dataArray) {
+                    JsonNode info = orgNode.get("info");
 
-                stmt.setObject(19, orgNode.get("authorities").toString(), java.sql.Types.OTHER);
-                stmt.setObject(20, orgNode.get("activities").toString(), java.sql.Types.OTHER);
-                stmt.setObject(21, orgNode.get("heads").toString(), java.sql.Types.OTHER);
-                stmt.setObject(22, orgNode.get("facialAccounts").toString(), java.sql.Types.OTHER);
-                stmt.setObject(23, orgNode.get("foAccounts").toString(), java.sql.Types.OTHER);
-                stmt.setObject(24, orgNode.get("nonParticipantPermissions").toString(), java.sql.Types.OTHER);
-                stmt.setObject(25, orgNode.get("procurementPermissions").toString(), java.sql.Types.OTHER);
-                stmt.setObject(26, orgNode.get("contacts").toString(), java.sql.Types.OTHER);
+                    System.out.println(info.get("fullName").asText());
 
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.S]");
-                String rawLoadDate = info.get("loadDate").asText().trim();
-                LocalDateTime dateTime = LocalDateTime.parse(rawLoadDate, formatter);
-                stmt.setTimestamp(27, java.sql.Timestamp.valueOf(dateTime));
+                    stmt.setString(1, orgNode.get("id").asText());
+                    stmt.setString(2, info.get("regNum").asText());
+                    stmt.setString(3, info.get("code").asText());
+                    stmt.setString(4, info.get("fullName").asText());
+                    stmt.setString(5, info.get("shortName").asText());
+                    stmt.setString(6, info.get("inn").asText());
+                    stmt.setString(7, info.get("kpp").asText());
+                    stmt.setString(8, info.get("ogrn").asText());
+                    stmt.setString(9, info.get("okopfName").asText());
+                    stmt.setString(10, info.get("okopfCode").asText());
+                    stmt.setString(11, info.get("okfsName").asText());
+                    stmt.setString(12, info.get("okfsCode").asText());
+                    stmt.setString(13, info.get("cityName").asText());
+                    stmt.setString(14, info.get("streetName").asText());
+                    stmt.setString(15, info.get("house").asText());
+                    stmt.setString(16, info.get("regionName").asText());
+                    stmt.setString(17, info.get("statusName").asText());
+                    stmt.setString(18, info.get("recordNum").asText());
 
-                stmt.addBatch();
+                    stmt.setObject(19, orgNode.get("authorities").toString(), java.sql.Types.OTHER);
+                    stmt.setObject(20, orgNode.get("activities").toString(), java.sql.Types.OTHER);
+                    stmt.setObject(21, orgNode.get("heads").toString(), java.sql.Types.OTHER);
+                    stmt.setObject(22, orgNode.get("facialAccounts").toString(), java.sql.Types.OTHER);
+                    stmt.setObject(23, orgNode.get("foAccounts").toString(), java.sql.Types.OTHER);
+                    stmt.setObject(24, orgNode.get("nonParticipantPermissions").toString(), java.sql.Types.OTHER);
+                    stmt.setObject(25, orgNode.get("procurementPermissions").toString(), java.sql.Types.OTHER);
+                    stmt.setObject(26, orgNode.get("contacts").toString(), java.sql.Types.OTHER);
+
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.S]");
+                    String rawLoadDate = info.get("loadDate").asText().trim();
+                    LocalDateTime dateTime = LocalDateTime.parse(rawLoadDate, formatter);
+                    stmt.setTimestamp(27, java.sql.Timestamp.valueOf(dateTime));
+
+                    stmt.addBatch();
+                    totalInserted++;
+                }
+
                 stmt.executeBatch();
             }
-            LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
-            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate());
 
+            System.out.println("Всего вставлено компаний: " + totalInserted);
+
+            LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
+            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate())
+                    .withHour(23).withMinute(59).withSecond(59);
             postgresToClickHouseTransfer.transfer(dateTimeOfStart, dateTimeOfEnd);
+
         } catch (SQLException e) {
             System.out.println("Ошибка при выполнении запроса на вставку " + e.getMessage());
         } catch (JsonProcessingException e) {
@@ -97,15 +111,19 @@ public class DataBaseFiller {
         }
     }
 
+
     private void setSqlDeleteStatementForTimeRange() {
         try (Connection conn = PostgresConnectionManager.get();
              PreparedStatement stmt = conn.prepareStatement(DELETE_STATEMENT)) {
 
             LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
-            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate());
-
+            System.out.println("ВРЕМЯ ОТКУДА УДАЛЯЕМ: " + dateTimeOfStart);
+            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate())
+                    .withHour(23).withMinute(59).withSecond(59);
+            System.out.println("ВРЕМЯ ДО КУДА УДАЛЯЕМ: " + dateTimeOfEnd);
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(dateTimeOfStart));
             stmt.setTimestamp(2, java.sql.Timestamp.valueOf(dateTimeOfEnd));
+            System.out.println("Удалены старые записи за период с " + dateTimeOfStart + "по" + dateTimeOfEnd );
             stmt.executeUpdate();
         } catch (SQLException e) {
             System.out.println("Что-то пошло не так при удалении уже существующих записей в postgres: " + e);

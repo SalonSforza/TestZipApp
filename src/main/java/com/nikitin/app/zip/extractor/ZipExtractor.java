@@ -62,6 +62,14 @@ public class ZipExtractor {
         filesToZip.add(new File(csvFileName));
         if (xmlFile != null) filesToZip.add(xmlFile);
         zipFiles(filesToZip, zipFilePath);
+        for (File f : filesToZip) {
+            if (f.exists()) {
+                boolean deleted = f.delete();
+                if (!deleted) {
+                    System.out.println("Не удалось удалить временный файл: " + f.getAbsolutePath());
+                }
+            }
+        }
 
         System.out.printf(
                 "Выполнен экспорт данных за период с %s по %s по адресу %s%n",
@@ -75,7 +83,8 @@ public class ZipExtractor {
                 PreparedStatement stmt = conn.prepareStatement(SELECT_QUERY)
         ) {
             LocalDateTime startTime = dayTimeFormatter.formatTimeOfStartFromString(startOfSearch);
-            LocalDateTime endTime = dayTimeFormatter.formatTimeOfStartFromString(endOfSearch);
+            LocalDateTime endTime = dayTimeFormatter.formatTimeOfStartFromString(endOfSearch)
+                    .withHour(23).withMinute(59).withSecond(59);
             stmt.setTimestamp(1, Timestamp.valueOf(startTime));
             stmt.setTimestamp(2, Timestamp.valueOf(endTime));
 
@@ -85,7 +94,7 @@ public class ZipExtractor {
                     OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
                     BufferedWriter csvWriter = new BufferedWriter(osw)
             ) {
-
+                System.out.println(rs);
                 fos.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
                 ResultSetMetaData meta = rs.getMetaData();

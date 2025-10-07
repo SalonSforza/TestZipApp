@@ -2,6 +2,8 @@ package com.nikitin.app.data.fetcher;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.nikitin.app.db.connection.manager.PropertiesUtil;
 import com.nikitin.app.user.imput.interpreter.UserRequestData;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
@@ -29,26 +31,36 @@ public class DataFetcher {
     }
 
     private String fetchJsonFromApi() {
-        StringBuilder allResponses = new StringBuilder();
+        ArrayNode combinedData = objectMapper.createArrayNode();
+        int pageCount = 1;
+
         try {
-            String firstUrl = String.format("%s,%s", BASE_URL, userRequestData.getParameters());
+            String firstUrl = String.format("%s%s", BASE_URL, userRequestData.getParameters());
+            System.out.println(firstUrl);
             try (CloseableHttpResponse firstResponse = httpClient.execute(new HttpGet(firstUrl))) {
                 String jsonResponse = EntityUtils.toString(firstResponse.getEntity());
                 JsonNode root = objectMapper.readTree(jsonResponse);
-                int pageCount = root.get("pageCount").asInt();
-                allResponses.append(jsonResponse).append("\n");
+                pageCount = root.get("pageCount").asInt();
+                combinedData.addAll((ArrayNode) root.get("data"));
                 System.out.println("Загружена страница 1/" + pageCount);
+            }
 
-                for (int i = 2; i <= pageCount; i++) {
-                    String pagedUrl = String.format("%s,%s,&pageNum=%d", BASE_URL,
-                            (userRequestData.getStartDate() + userRequestData.getEndDate()), i);
-                    try (CloseableHttpResponse response = httpClient.execute(new HttpGet(pagedUrl))) {
-                        allResponses.append(EntityUtils.toString(response.getEntity())).append("\n");
-                        System.out.println("Загружена страница " + i + "/" + pageCount);
-                    }
+            for (int i = 2; i <= pageCount; i++) {
+                String pagedUrl = String.format("%s&pageNum=%d",firstUrl, i);
+                System.out.println(pagedUrl);
+                try (CloseableHttpResponse response = httpClient.execute(new HttpGet(pagedUrl))) {
+                    String jsonResponse = EntityUtils.toString(response.getEntity());
+                    JsonNode root = objectMapper.readTree(jsonResponse);
+                    combinedData.addAll((ArrayNode) root.get("data"));
+                    System.out.println("Загружена страница " + i + "/" + pageCount);
                 }
             }
-            return allResponses.toString();
+
+            ObjectNode finalJson = objectMapper.createObjectNode();
+            finalJson.set("data", combinedData);
+            finalJson.put("pageCount", pageCount);
+            return objectMapper.writeValueAsString(finalJson);
+
         } catch (IOException | ParseException e) {
             throw new RuntimeException("Ошибка при выполнении запроса или парсинге JSON", e);
         }
