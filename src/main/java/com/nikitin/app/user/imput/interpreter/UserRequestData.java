@@ -1,6 +1,5 @@
 package com.nikitin.app.user.imput.interpreter;
 
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -13,55 +12,70 @@ public class UserRequestData {
     private String endDate;
 
     public String getParameters() {
-
         Scanner scanner = new Scanner(System.in);
 
-        this.startDate = askDate(scanner, "Введите дату начала поиска в формате дд.мм.гггг" +
-                                          " (или просто нажмите Enter, чтобы пропустить): ");
+        while (true) {
 
-        this.endDate = askDate(scanner, "Введите дату конца поиска в формате дд.мм.гггг" +
-                                        " (или просто нажмите Enter, чтобы пропустить): ");
+            this.startDate = askDate(scanner, "Введите дату начала поиска в формате дд.мм.гггг (или 'restart' для перезапуска, 'exit' для выхода): ");
 
-        StringBuilder urlBuilder = new StringBuilder();
-        boolean hasParam = false;
-        if (!startDate.isEmpty()) {
-            urlBuilder.append("?");
-            urlBuilder.append("filterminloaddate=").append(startDate);
-            hasParam = true;
+            if (handleCommands(this.startDate)) {
+                continue;
+            }
+
+            this.endDate = askDate(scanner, "Введите дату конца поиска в формате дд.мм.гггг (или 'restart' для перезапуска, 'exit' для выхода): ");
+
+            if (handleCommands(this.endDate)) {
+                continue;
+            }
+
+            try {
+                LocalDate start = LocalDate.parse(this.startDate, FORMATTER);
+                LocalDate end = LocalDate.parse(this.endDate, FORMATTER);
+
+                if (end.isBefore(start)) {
+                    System.out.println("Дата конца поиска не может быть раньше даты начала. Попробуйте снова.\n");
+                    continue;
+                }
+
+                return "?filterminloaddate=" + startDate + "&filtermaxloaddate=" + endDate;
+
+            } catch (DateTimeParseException e) {
+                System.out.println("Неверный формат даты. Используйте дд.мм.гггг\n");
+            }
         }
-
-        if (!endDate.isEmpty()) {
-            urlBuilder.append(hasParam ? "&" : "?");
-            urlBuilder.append("filtermaxloaddate=").append(endDate);
-        }
-
-        return urlBuilder.toString();
     }
 
     private String askDate(Scanner scanner, String prompt) {
         while (true) {
             System.out.print(prompt);
             String input = scanner.nextLine().trim();
-            if (input.isEmpty()) {
-                return "";
+            if (input.equalsIgnoreCase("restart") || input.equalsIgnoreCase("exit")) {
+                return input.toLowerCase();
             }
             try {
                 LocalDate.parse(input, FORMATTER);
                 return input;
             } catch (DateTimeParseException e) {
-                System.out.println("Неверный формат даты. Используйте дд.мм.гггг или нажмите Enter, чтобы не указывать дату.");
+                if (input.isEmpty()) {
+                    System.out.println("Введена пустая дата. Пожалуйста, введите дату в формате дд.мм.гггг");
+                } else {
+                    System.out.println("Неверный формат даты. Используйте дд.мм.гггг");
+                }
             }
         }
     }
 
-    public void setStartDate(String startDate) {
-        this.startDate = startDate;
+    private boolean handleCommands(String input) {
+        if (input.equalsIgnoreCase("restart")) {
+            System.out.println("Перезапуск программы по запросу пользователя...\n");
+            return true;
+        }
+        if (input.equalsIgnoreCase("exit")) {
+            System.out.println("Завершение программы по запросу пользователя...");
+            System.exit(0);
+        }
+        return false;
     }
-
-    public void setEndDate(String endDate) {
-        this.endDate = endDate;
-    }
-
 
     public String getEndDate() {
         return endDate;
