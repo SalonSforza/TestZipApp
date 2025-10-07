@@ -25,12 +25,10 @@ public class DataBaseFiller {
     private static final String DELETE_STATEMENT = "DELETE FROM organizations WHERE load_date BETWEEN ? AND ?";
 
 
-
     private final DataFetcher dataFetcher = new DataFetcher();
     private final ObjectMapper mapper = new ObjectMapper();
     private final StringToDayTimeFormatter dayTimeFormatter = new StringToDayTimeFormatter();
     private final PostgresToClickHouseTransfer postgresToClickHouseTransfer = new PostgresToClickHouseTransfer();
-
 
 
     private String startDate;
@@ -103,7 +101,6 @@ public class DataBaseFiller {
         try (Connection conn = PostgresConnectionManager.get();
              PreparedStatement stmt = conn.prepareStatement(DELETE_STATEMENT)) {
 
-
             LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
             LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate());
 
@@ -111,20 +108,20 @@ public class DataBaseFiller {
             stmt.setTimestamp(2, java.sql.Timestamp.valueOf(dateTimeOfEnd));
             stmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Что-то пошло не так при удалении уже существующих записей: " + e.getMessage());
+            System.out.println("Что-то пошло не так при удалении уже существующих записей в postgres: " + e);
         }
     }
 
     public String getStartDate() {
-        if(startDate == null) {
-           return dataFetcher.getUserRequestData().getStartDate();
+        if (startDate == null) {
+            return dataFetcher.getUserRequestData().getStartDate();
         }
         return startDate;
     }
 
     public String getEndDate() {
-        if(endDate == null) {
-          return dataFetcher.getUserRequestData().getEndDate();
+        if (endDate == null) {
+            return dataFetcher.getUserRequestData().getEndDate();
         }
         return endDate;
     }

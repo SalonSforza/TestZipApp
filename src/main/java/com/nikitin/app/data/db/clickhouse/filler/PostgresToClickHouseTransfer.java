@@ -14,8 +14,10 @@ public class PostgresToClickHouseTransfer {
 
     private static final String SELECT_POSTGRES = "SELECT * FROM organizations WHERE load_date BETWEEN ? AND ?";
     private static final String INSERT_CLICKHOUSE = "INSERT INTO organizations VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    private static final String DELETE_STATEMENT = "DELETE FROM organizations WHERE load_date BETWEEN ? AND ?";
 
     public void transfer(LocalDateTime start, LocalDateTime end) {
+        deleteRange(start, end);
         try (Connection pgConn = PostgresConnectionManager.get();
              Connection chConn = ClickHouseConnectionManager.get();
              PreparedStatement pgStmt = pgConn.prepareStatement(SELECT_POSTGRES);
@@ -40,11 +42,20 @@ public class PostgresToClickHouseTransfer {
                 }
                 if (batchSize > 0) chStmt.executeBatch();
             }
-
             System.out.println("Данные успешно перенесены в ClickHouse");
-
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при переносе данных в ClickHouse", e);
+        }
+    }
+
+    private void deleteRange(LocalDateTime start, LocalDateTime end) {
+        try (Connection conn = PostgresConnectionManager.get();
+             PreparedStatement stmt = conn.prepareStatement(DELETE_STATEMENT)) {
+            stmt.setTimestamp(1, java.sql.Timestamp.valueOf(start));
+            stmt.setTimestamp(2, java.sql.Timestamp.valueOf(end));
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("Что-то пошло не так при удалении уже существующих записей в clickhouse: " + e);
         }
     }
 }
