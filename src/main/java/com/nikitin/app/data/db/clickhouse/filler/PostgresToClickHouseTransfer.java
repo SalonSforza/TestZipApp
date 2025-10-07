@@ -54,6 +54,7 @@ public class PostgresToClickHouseTransfer {
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(start));
             stmt.setTimestamp(2, java.sql.Timestamp.valueOf(end));
             stmt.executeUpdate();
+            System.out.println("Из clickHouse удалены данные за период с " + start + "по " + end);
         } catch (SQLException e) {
             System.out.println("Что-то пошло не так при удалении уже существующих записей в clickhouse: " + e);
         }

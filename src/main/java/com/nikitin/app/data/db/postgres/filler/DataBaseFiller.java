@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nikitin.app.data.db.clickhouse.filler.PostgresToClickHouseTransfer;
 import com.nikitin.app.data.fetcher.DataFetcher;
 import com.nikitin.app.db.connection.manager.PostgresConnectionManager;
+import com.nikitin.app.db.connection.manager.PropertiesUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -23,7 +24,7 @@ public class DataBaseFiller {
                                                    ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final String DELETE_STATEMENT = "DELETE FROM organizations WHERE load_date BETWEEN ? AND ?";
-
+    private static final String ENABLE_CLICKHOUSE_TRANSFER = "enable_clickhouse_transfer";
 
     private final DataFetcher dataFetcher = new DataFetcher();
     private final ObjectMapper mapper = new ObjectMapper();
@@ -97,10 +98,13 @@ public class DataBaseFiller {
 
             System.out.println("Всего вставлено компаний: " + totalInserted);
 
-            LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
-            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate())
-                    .withHour(23).withMinute(59).withSecond(59);
-            postgresToClickHouseTransfer.transfer(dateTimeOfStart, dateTimeOfEnd);
+            if(Boolean.parseBoolean(PropertiesUtil.get(ENABLE_CLICKHOUSE_TRANSFER))) {
+                LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
+                LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate())
+                        .withHour(23).withMinute(59).withSecond(59);
+                postgresToClickHouseTransfer.transfer(dateTimeOfStart, dateTimeOfEnd);
+            }
+
 
         } catch (SQLException e) {
             System.out.println("Ошибка при выполнении запроса на вставку " + e.getMessage());
