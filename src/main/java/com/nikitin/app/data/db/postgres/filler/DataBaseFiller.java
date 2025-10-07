@@ -92,19 +92,19 @@ public class DataBaseFiller {
                     actuallyInserted++;
                 }
             }
-            System.out.println("Фактически вставлено: " + actuallyInserted);
+            System.out.println("Фактически вставлено в postgres: " + actuallyInserted);
 
             if (Boolean.parseBoolean(PropertiesUtil.get(ENABLE_CLICKHOUSE_TRANSFER))) {
-                LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
-                LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfEndFromString(getEndDate())
+                LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeFromString(getStartDate());
+                LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeFromString(getEndDate())
                         .withHour(23).withMinute(59).withSecond(59);
                 postgresToClickHouseTransfer.transfer(dateTimeOfStart, dateTimeOfEnd);
             }
 
         } catch (SQLException e) {
-            System.out.println("Ошибка при выполнении запроса на вставку " + e.getMessage());
+            throw new RuntimeException("Ошибка при выполнении запроса на вставку в postgres", e);
         } catch (JsonProcessingException e) {
-            System.out.println("Ошибка при парсинге JSON (блок запроса на вставку) " + e.getMessage());
+            throw new RuntimeException("Ошибка при парсинге JSON (блок запроса на вставку) ", e);
         }
     }
 
@@ -112,15 +112,15 @@ public class DataBaseFiller {
         try (Connection conn = PostgresConnectionManager.get();
              PreparedStatement stmt = conn.prepareStatement(DELETE_STATEMENT)) {
 
-            LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
-            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate())
+            LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeFromString(getStartDate());
+            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeFromString(getEndDate())
                     .withHour(23).withMinute(59).withSecond(59);
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(dateTimeOfStart));
             stmt.setTimestamp(2, java.sql.Timestamp.valueOf(dateTimeOfEnd));
             System.out.println("Удалены старые записи за период с " + dateTimeOfStart + "по" + dateTimeOfEnd);
             stmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Что-то пошло не так при удалении уже существующих записей в postgres: " + e);
+            throw new RuntimeException("Что-то пошло не так при удалении уже существующих записей в postgres: ", e);
         }
     }
 

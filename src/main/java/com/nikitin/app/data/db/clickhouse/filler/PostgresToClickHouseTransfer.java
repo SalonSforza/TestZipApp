@@ -27,6 +27,7 @@ public class PostgresToClickHouseTransfer {
             pgStmt.setTimestamp(1, Timestamp.valueOf(start));
             pgStmt.setTimestamp(2, Timestamp.valueOf(end));
 
+            int totalRows = 0;
             try (ResultSet rs = pgStmt.executeQuery()) {
                 int batchSize = 0;
                 while (rs.next()) {
@@ -38,12 +39,18 @@ public class PostgresToClickHouseTransfer {
 
                     if (batchSize >= 1000) {
                         chStmt.executeBatch();
+                        totalRows += batchSize;
                         batchSize = 0;
                     }
                 }
-                if (batchSize > 0) chStmt.executeBatch();
+                if (batchSize > 0) {
+                    chStmt.executeBatch();
+                    totalRows += batchSize;
+                }
             }
-            System.out.println("Данные успешно перенесены в ClickHouse");
+
+            System.out.println("Данные успешно перенесены в ClickHouse. Перенесено строк: " + totalRows);
+
         } catch (SQLException e) {
             throw new RuntimeException("Ошибка при переносе данных в ClickHouse", e);
         }
@@ -57,7 +64,7 @@ public class PostgresToClickHouseTransfer {
             stmt.executeUpdate();
             System.out.println("Из clickHouse удалены данные за период с " + start + "по " + end);
         } catch (SQLException e) {
-            System.out.println("Что-то пошло не так при удалении уже существующих записей в clickhouse: " + e);
+           throw new RuntimeException("Что-то пошло не так при удалении уже существующих записей в clickhouse", e);
         }
     }
 }

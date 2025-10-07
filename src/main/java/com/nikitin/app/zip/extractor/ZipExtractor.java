@@ -82,9 +82,10 @@ public class ZipExtractor {
                 Connection conn = PostgresConnectionManager.get();
                 PreparedStatement stmt = conn.prepareStatement(SELECT_QUERY)
         ) {
-            LocalDateTime startTime = dayTimeFormatter.formatTimeOfStartFromString(startOfSearch);
-            LocalDateTime endTime = dayTimeFormatter.formatTimeOfStartFromString(endOfSearch)
+            LocalDateTime startTime = dayTimeFormatter.formatTimeFromString(startOfSearch);
+            LocalDateTime endTime = dayTimeFormatter.formatTimeFromString(endOfSearch)
                     .withHour(23).withMinute(59).withSecond(59);
+            System.out.println("CSV запрос: с " + startTime + " по " + endTime);
             stmt.setTimestamp(1, Timestamp.valueOf(startTime));
             stmt.setTimestamp(2, Timestamp.valueOf(endTime));
 
@@ -104,8 +105,7 @@ public class ZipExtractor {
                     if (i < columnCount) csvWriter.append(",");
                 }
                 csvWriter.append("\n");
-
-
+                int rowCount = 0;
                 while (rs.next()) {
                     for (int i = 1; i <= columnCount; i++) {
                         String value = rs.getString(i);
@@ -113,8 +113,10 @@ public class ZipExtractor {
                         if (i < columnCount) csvWriter.append(",");
                     }
                     csvWriter.append("\n");
+                    rowCount++;
                 }
                 csvWriter.flush();
+                System.out.println("Записано строк в CSV: " + rowCount);
             }
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при создании CSV: " + e.getMessage(), e);
