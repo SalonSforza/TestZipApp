@@ -50,8 +50,6 @@ public class DataBaseFiller {
                 JsonNode rootNode = mapper.readTree(pageJson);
                 JsonNode dataArray = rootNode.get("data");
 
-                System.out.println("Обработка страницы, компаний: " + dataArray.size());
-
                 for (JsonNode orgNode : dataArray) {
                     JsonNode info = orgNode.get("info");
 
@@ -117,10 +115,8 @@ public class DataBaseFiller {
              PreparedStatement stmt = conn.prepareStatement(DELETE_STATEMENT)) {
 
             LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
-            System.out.println("ВРЕМЯ ОТКУДА УДАЛЯЕМ: " + dateTimeOfStart);
             LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate())
                     .withHour(23).withMinute(59).withSecond(59);
-            System.out.println("ВРЕМЯ ДО КУДА УДАЛЯЕМ: " + dateTimeOfEnd);
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(dateTimeOfStart));
             stmt.setTimestamp(2, java.sql.Timestamp.valueOf(dateTimeOfEnd));
             System.out.println("Удалены старые записи за период с " + dateTimeOfStart + "по" + dateTimeOfEnd );

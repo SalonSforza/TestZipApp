@@ -94,7 +94,6 @@ public class ZipExtractor {
                     OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
                     BufferedWriter csvWriter = new BufferedWriter(osw)
             ) {
-                System.out.println(rs);
                 fos.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
                 ResultSetMetaData meta = rs.getMetaData();

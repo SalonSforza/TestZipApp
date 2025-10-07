@@ -63,6 +63,7 @@ public class DataFetcher {
 
         } catch (IOException | ParseException e) {
             throw new RuntimeException("Ошибка при выполнении запроса или парсинге JSON", e);
+
         }
     }
 
