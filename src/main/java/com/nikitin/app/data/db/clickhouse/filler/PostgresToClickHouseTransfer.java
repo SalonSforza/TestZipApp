@@ -49,7 +49,7 @@ public class PostgresToClickHouseTransfer {
     }
 
     private void deleteRange(LocalDateTime start, LocalDateTime end) {
-        try (Connection conn = PostgresConnectionManager.get();
+        try (Connection conn = ClickHouseConnectionManager.get();
              PreparedStatement stmt = conn.prepareStatement(DELETE_STATEMENT)) {
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(start));
             stmt.setTimestamp(2, java.sql.Timestamp.valueOf(end));
