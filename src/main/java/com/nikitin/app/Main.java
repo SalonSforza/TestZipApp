@@ -1,10 +1,10 @@
 package com.nikitin.app;
 
-import com.nikitin.app.data.db.filler.DataBaseFiller;
+import com.nikitin.app.zip.extractor.ZipExtractor;
 
 public class Main {
     public static void main(String[] args) {
-        DataBaseFiller filler = new DataBaseFiller();
-        filler.fillDataBase();
+        ZipExtractor zipExtractor = new ZipExtractor();
+        zipExtractor.downloadAndArchiveToZip();
     }
 }

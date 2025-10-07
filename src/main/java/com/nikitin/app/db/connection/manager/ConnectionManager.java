@@ -45,7 +45,6 @@ public final class ConnectionManager {
                 throw new RuntimeException("Driver not found in application.properties: " + DB_DRIVER_KEY);
             }
             Class.forName(driverClassName);
-            System.out.println("✅ Loaded DB driver: " + driverClassName);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Failed to load database driver", e);
         }

@@ -23,6 +23,8 @@ public class DataBaseFiller {
 
     private static final String DELETE_STATEMENT = "DELETE FROM organizations WHERE load_date BETWEEN ? AND ?";
 
+
+
     private final DataFetcher dataFetcher = new DataFetcher();
     private final ObjectMapper mapper = new ObjectMapper();
     private final StringToDayTimeFormatter dayTimeFormatter = new StringToDayTimeFormatter();
@@ -99,10 +101,12 @@ public class DataBaseFiller {
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(dateTimeOfStart));
             stmt.setTimestamp(2, java.sql.Timestamp.valueOf(dateTimeOfEnd));
             stmt.executeUpdate();
-
-            System.out.printf("Удалены данные с %s по %s! \n", startDateStr, endDateStr);
         } catch (SQLException e) {
             System.out.println("Что-то пошло не так при удалении уже существующих записей: " + e.getMessage());
         }
+    }
+
+    public DataFetcher getDataFetcher() {
+        return this.dataFetcher;
     }
 }
