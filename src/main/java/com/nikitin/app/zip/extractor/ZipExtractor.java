@@ -7,9 +7,18 @@ import com.nikitin.app.data.xml.converter.JsonToXmlConverter;
 import com.nikitin.app.db.connection.manager.PostgresConnectionManager;
 import com.nikitin.app.db.connection.manager.PropertiesUtil;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +34,7 @@ public class ZipExtractor {
     private final JsonToXmlConverter xmlConverter = new JsonToXmlConverter();
 
     public void downloadAndArchiveToZip() {
-            dbFiller.fillDataBase();
+        dbFiller.fillDataBase();
 
         String startOfSearch = dbFiller.getDataFetcher().getUserRequestData().getStartDate();
         String endOfSearch = dbFiller.getDataFetcher().getUserRequestData().getEndDate();

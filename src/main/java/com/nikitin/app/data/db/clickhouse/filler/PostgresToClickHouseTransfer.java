@@ -35,7 +35,7 @@ public class PostgresToClickHouseTransfer {
                     chStmt.addBatch();
                     batchSize++;
 
-                    if (batchSize >= 1000) {  // flush every 1000 rows
+                    if (batchSize >= 1000) {
                         chStmt.executeBatch();
                         batchSize = 0;
                     }

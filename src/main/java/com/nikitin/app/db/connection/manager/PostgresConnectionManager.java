@@ -15,7 +15,7 @@ public final class PostgresConnectionManager {
     private static final String URL_KEY = "db.url";
     private static final String POOL_SIZE_KEY = "db.pool_size";
     private static final String DB_DRIVER_KEY = "db.driver";
-    private static final Integer DEFAULT_POOL_SIZE= 10;
+    private static final Integer DEFAULT_POOL_SIZE = 10;
     private static BlockingQueue<Connection> pool;
     private static List<Connection> sourceConnections;
 
@@ -31,8 +31,8 @@ public final class PostgresConnectionManager {
         sourceConnections = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             Connection connection = open();
-            Connection proxyConnection = (Connection)Proxy.newProxyInstance(PostgresConnectionManager.class.getClassLoader(),new Class[]{Connection.class},
-                    ((proxy, method, args) -> method.getName().equals("close") ? pool.add((Connection) proxy): method.invoke(connection, args)));
+            Connection proxyConnection = (Connection) Proxy.newProxyInstance(PostgresConnectionManager.class.getClassLoader(), new Class[]{Connection.class},
+                    ((proxy, method, args) -> method.getName().equals("close") ? pool.add((Connection) proxy) : method.invoke(connection, args)));
             pool.add(proxyConnection);
             sourceConnections.add(connection);
         }
@@ -55,7 +55,7 @@ public final class PostgresConnectionManager {
 
     public static Connection get() {
         try {
-           return pool.take();
+            return pool.take();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -73,8 +73,8 @@ public final class PostgresConnectionManager {
         }
     }
 
-    public static void closePool(){
-        for(Connection sourceConnection : sourceConnections){
+    public static void closePool() {
+        for (Connection sourceConnection : sourceConnections) {
             try {
                 sourceConnection.close();
             } catch (SQLException e) {

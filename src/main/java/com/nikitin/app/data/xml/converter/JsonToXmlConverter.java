@@ -24,7 +24,6 @@ public class JsonToXmlConverter {
                 new OutputStreamWriter(Files.newOutputStream(xmlFile.toPath()), StandardCharsets.UTF_8))) {
             writer.write(xmlContent);
         }
-
         return xmlFile;
     }
 }

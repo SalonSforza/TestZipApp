@@ -17,10 +17,10 @@ public class UserRequestData {
         Scanner scanner = new Scanner(System.in);
 
         this.startDate = askDate(scanner, "Введите дату начала поиска в формате дд.мм.гггг" +
-                                            " (или просто нажмите Enter, чтобы пропустить): ");
+                                          " (или просто нажмите Enter, чтобы пропустить): ");
 
         this.endDate = askDate(scanner, "Введите дату конца поиска в формате дд.мм.гггг" +
-                                          " (или просто нажмите Enter, чтобы пропустить): ");
+                                        " (или просто нажмите Enter, чтобы пропустить): ");
 
         StringBuilder urlBuilder = new StringBuilder();
         boolean hasParam = false;
