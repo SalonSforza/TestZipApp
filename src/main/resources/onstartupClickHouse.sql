@@ -1,0 +1,31 @@
+CREATE TABLE IF NOT EXISTS organizations
+(
+    id String,
+    reg_num String,
+    code String,
+    full_name String,
+    short_name String,
+    inn String,
+    kpp String,
+    ogrn String,
+    okopf_name String,
+    okopf_code String,
+    okfs_name String,
+    okfs_code String,
+    city_name String,
+    street_name String,
+    house String,
+    region_name String,
+    status_name String,
+    record_num String,
+    authorities String,
+    activities String,
+    heads String,
+    facial_accounts String,
+    fo_accounts String,
+    non_participant_permissions String,
+    procurement_permissions String,
+    contacts String,
+    load_date DateTime
+) ENGINE = MergeTree()
+    ORDER BY id;
