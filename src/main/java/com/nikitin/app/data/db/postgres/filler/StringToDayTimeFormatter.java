@@ -1,4 +1,4 @@
-package com.nikitin.app.data.db.filler;
+package com.nikitin.app.data.db.postgres.filler;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;

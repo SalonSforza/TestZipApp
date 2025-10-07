@@ -1,10 +1,11 @@
-package com.nikitin.app.data.db.filler;
+package com.nikitin.app.data.db.postgres.filler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nikitin.app.data.db.clickhouse.filler.PostgresToClickHouseTransfer;
 import com.nikitin.app.data.fetcher.DataFetcher;
-import com.nikitin.app.db.connection.manager.ConnectionManager;
+import com.nikitin.app.db.connection.manager.PostgresConnectionManager;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,9 +29,15 @@ public class DataBaseFiller {
     private final DataFetcher dataFetcher = new DataFetcher();
     private final ObjectMapper mapper = new ObjectMapper();
     private final StringToDayTimeFormatter dayTimeFormatter = new StringToDayTimeFormatter();
+    private final PostgresToClickHouseTransfer postgresToClickHouseTransfer = new PostgresToClickHouseTransfer();
+
+
+
+    private String startDate;
+    private String endDate;
 
     public void fillDataBase() {
-        try (Connection conn = ConnectionManager.get();
+        try (Connection conn = PostgresConnectionManager.get();
              PreparedStatement stmt = conn.prepareStatement(INSERT_STATEMENT)) {
             String json = dataFetcher.getResultingJson();
 
@@ -81,6 +88,10 @@ public class DataBaseFiller {
                 stmt.addBatch();
                 stmt.executeBatch();
             }
+            LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
+            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate());
+
+            postgresToClickHouseTransfer.transfer(dateTimeOfStart, dateTimeOfEnd);
         } catch (SQLException e) {
             System.out.println("Ошибка при выполнении запроса на вставку " + e.getMessage());
         } catch (JsonProcessingException e) {
@@ -89,14 +100,12 @@ public class DataBaseFiller {
     }
 
     private void setSqlDeleteStatementForTimeRange() {
-        try (Connection conn = ConnectionManager.get();
+        try (Connection conn = PostgresConnectionManager.get();
              PreparedStatement stmt = conn.prepareStatement(DELETE_STATEMENT)) {
 
-            String startDateStr = dataFetcher.getUserRequestData().getStartDate();
-            String endDateStr = dataFetcher.getUserRequestData().getEndDate();
 
-            LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(startDateStr);
-            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(endDateStr);
+            LocalDateTime dateTimeOfStart = dayTimeFormatter.formatTimeOfStartFromString(getStartDate());
+            LocalDateTime dateTimeOfEnd = dayTimeFormatter.formatTimeOfStartFromString(getEndDate());
 
             stmt.setTimestamp(1, java.sql.Timestamp.valueOf(dateTimeOfStart));
             stmt.setTimestamp(2, java.sql.Timestamp.valueOf(dateTimeOfEnd));
@@ -104,6 +113,20 @@ public class DataBaseFiller {
         } catch (SQLException e) {
             System.out.println("Что-то пошло не так при удалении уже существующих записей: " + e.getMessage());
         }
+    }
+
+    public String getStartDate() {
+        if(startDate == null) {
+           return dataFetcher.getUserRequestData().getStartDate();
+        }
+        return startDate;
+    }
+
+    public String getEndDate() {
+        if(endDate == null) {
+          return dataFetcher.getUserRequestData().getEndDate();
+        }
+        return endDate;
     }
 
     public DataFetcher getDataFetcher() {

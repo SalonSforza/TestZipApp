@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-public final class ConnectionManager {
+public final class PostgresConnectionManager {
     private static final String USERNAME_KEY = "db.username";
     private static final String PASSWORD_KEY = "db.password";
     private static final String URL_KEY = "db.url";
@@ -31,7 +31,7 @@ public final class ConnectionManager {
         sourceConnections = new ArrayList<>();
         for (int i = 0; i < size; i++) {
             Connection connection = open();
-            Connection proxyConnection = (Connection)Proxy.newProxyInstance(ConnectionManager.class.getClassLoader(),new Class[]{Connection.class},
+            Connection proxyConnection = (Connection)Proxy.newProxyInstance(PostgresConnectionManager.class.getClassLoader(),new Class[]{Connection.class},
                     ((proxy, method, args) -> method.getName().equals("close") ? pool.add((Connection) proxy): method.invoke(connection, args)));
             pool.add(proxyConnection);
             sourceConnections.add(connection);
@@ -50,7 +50,7 @@ public final class ConnectionManager {
         }
     }
 
-    private ConnectionManager() {
+    private PostgresConnectionManager() {
     }
 
     public static Connection get() {

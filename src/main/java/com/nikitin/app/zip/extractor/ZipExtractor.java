@@ -1,10 +1,10 @@
 package com.nikitin.app.zip.extractor;
 
-import com.nikitin.app.data.db.filler.DataBaseFiller;
-import com.nikitin.app.data.db.filler.StringToDayTimeFormatter;
+import com.nikitin.app.data.db.postgres.filler.DataBaseFiller;
+import com.nikitin.app.data.db.postgres.filler.StringToDayTimeFormatter;
 import com.nikitin.app.data.fetcher.DataFetcher;
 import com.nikitin.app.data.xml.converter.JsonToXmlConverter;
-import com.nikitin.app.db.connection.manager.ConnectionManager;
+import com.nikitin.app.db.connection.manager.PostgresConnectionManager;
 import com.nikitin.app.db.connection.manager.PropertiesUtil;
 
 import java.io.*;
@@ -62,7 +62,7 @@ public class ZipExtractor {
 
     private void generateCsv(String csvFileName, String startOfSearch, String endOfSearch) {
         try (
-                Connection conn = ConnectionManager.get();
+                Connection conn = PostgresConnectionManager.get();
                 PreparedStatement stmt = conn.prepareStatement(SELECT_QUERY)
         ) {
             LocalDateTime startTime = dayTimeFormatter.formatTimeOfStartFromString(startOfSearch);
