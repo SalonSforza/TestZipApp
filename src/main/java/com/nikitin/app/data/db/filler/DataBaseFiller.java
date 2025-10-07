@@ -32,7 +32,7 @@ public class DataBaseFiller {
     public void fillDataBase() {
         try (Connection conn = ConnectionManager.get();
              PreparedStatement stmt = conn.prepareStatement(INSERT_STATEMENT)) {
-            String json = dataFetcher.sendRequestToApi();
+            String json = dataFetcher.getResultingJson();
 
             setSqlDeleteStatementForTimeRange();
 
