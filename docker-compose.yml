@@ -1,0 +1,49 @@
+version: "3.9"
+
+#Run this programm via termial command 'docker compose run --rm app'
+#Due to console input it will not function properly with a simple docker compose up
+services:
+  app:
+    build: .
+    container_name: testziparchiver
+    depends_on:
+      - postgres
+      - clickhouse
+    ports:
+      - "8080:8080"
+    volumes:
+      - C:/Users/User/zipForTestApp/new:/app/zip
+    stdin_open: true
+    tty: true
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-postgres:/docker-entrypoint-initdb.d
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.7
+    container_name: clickhouse_db
+    restart: always
+    environment:
+      CLICKHOUSE_USER: user
+      CLICKHOUSE_PASSWORD: password
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - ./init-clickhouse:/docker-entrypoint-initdb.d
+      - clickhouse_data:/var/lib/clickhouse
+
+volumes:
+  pgdata:
+  clickhouse_data:
