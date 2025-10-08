@@ -1,24 +1,21 @@
-version: "3.9"
-
-#Run this programm via termial command 'docker compose run --rm app'
-#Due to console input it will not function properly with a simple docker compose up
+# For running this app you have to use terminal command 'docker compose run --rm app'
 services:
   app:
-    build: .
+    image: salonsforza/testziparchiver:latest
     container_name: testziparchiver
     depends_on:
       - postgres
       - clickhouse
-    ports:
-      - "8080:8080"
+    working_dir: /app
     volumes:
       - C:/Users/User/zipForTestApp/new:/app/zip
     stdin_open: true
     tty: true
+    command: java -jar app.jar
 
   postgres:
     image: postgres:16
-    container_name: postgres_db
+    container_name: postgres_db_for_test_app
     restart: always
     environment:
       POSTGRES_USER: user
@@ -32,7 +29,7 @@ services:
 
   clickhouse:
     image: clickhouse/clickhouse-server:24.7
-    container_name: clickhouse_db
+    container_name: clickhouse_db_for_test_app
     restart: always
     environment:
       CLICKHOUSE_USER: user
