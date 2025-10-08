@@ -1,4 +1,3 @@
-# For running this app you have to use terminal command 'docker compose run --rm app'
 services:
   app:
     image: salonsforza/testziparchiver:latest
